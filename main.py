@@ -166,10 +166,14 @@ class HTTPscan:
 
 
 def help():
-    print('HELP\n')
-    print('\tHTTP scan tool  to test the state of security  for websites on the\n\
-\tpublic internet.\n')
     usage()
+    print('DESCRIPTION\n')
+    print(
+        '\tTool to  test the  state of  security for  websites on  the public\n\
+\tinternet  using Mozilla  HTTP Observatory API (https://github.com/\n\
+\tmozilla/http-observatory/blob/master/httpobs/docs/api.md).  Output\n\
+\tis the test data in JSON format for each website in the file.\n'
+    )
     print('OPTIONS\n')
     print('\t-f, --file\tPlain text file with list of websites to scan. For ')
     print(
@@ -178,7 +182,14 @@ def help():
 \t\t\t\twebsite1.org\n\
 \t\t\t\twebsite2.info\n\
 \t\t\t\t...\n\
-\t\t\t\twebsiteN.io'
+\t\t\t\twebsiteN.io\n'
+    )
+    print('LICENSE\n')
+    print(
+        '\tLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licens\n\
+\tes/gpl.html>. This  is free software: you  are free to  change and\n\
+\tredistribute it. There is NO  WARRANTY, to the extent permitted by\n\
+\tlaw.'
     )
 
 
@@ -200,7 +211,7 @@ def main():
             sys.exit(1)
 
     except getopt.GetoptError as err:
-        print('ERROR:', err)
+        print(f'ERROR: {err}')
         usage()
         sys.exit(1)
 
@@ -208,20 +219,22 @@ def main():
         if opt in ('-f', '--file'):
             file = arg
 
+    if not os.path.exists(settings.LOG_PATH):
+        os.makedirs(settings.LOG_PATH)
+
     logging.basicConfig(
         filename=f'{settings.LOG_PATH}/HTTPscan.log',
         level=logging.getLevelName(settings.TRACE_LEVEL),
         format='%(asctime)-15s  [%(levelname)s] %(message)s'
     )
 
-    if not os.path.exists(file):
-        log.error(f'File "{file}"')
-
     httpscan = HTTPscan()
     websites = httpscan.read_file(file)
 
     for website in websites:
-        print(json.loads(httpscan.postAnalyze(website)))
+        data = json.loads(httpscan.postAnalyze(website))
+        data['website'] = website
+        print(json.dumps(data))
 
 
 if __name__ == '__main__':
